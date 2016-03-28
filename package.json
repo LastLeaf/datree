@@ -1,0 +1,23 @@
+{
+  "name": "dbview",
+  "version": "0.0.1",
+  "description": "Map database or other data sources to data views, and transform between views.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LastLeaf/dbview.git"
+  },
+  "author": "Boquan Fu <bqfu@163.com> (LastLeaf)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/LastLeaf/dbview/issues"
+  },
+  "homepage": "https://github.com/LastLeaf/dbview#readme",
+  "devDependencies": {
+    "istanbul": "^0.4.2",
+    "mocha": "^2.4.5"
+  }
+}
