@@ -1,6 +1,6 @@
 module.exports = {
     Shape: require('./lib/shape'),
-    View: require('./lib/view'),
-    ViewError: require('./lib/view_error'),
+    Node: require('./lib/node'),
+    NodeError: require('./lib/node_error'),
     MemorySource: require('./lib/memory_source'),
 };
