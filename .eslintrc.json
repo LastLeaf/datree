@@ -12,8 +12,6 @@
         "node": true,
         "commonjs": true,
         "es6": true,
-        "worker": true,
-        "amd": true,
         "mocha": true
     },
     "extends": "eslint:recommended",
