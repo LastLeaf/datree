@@ -2,10 +2,12 @@ var expect = require('chai').expect;
 var datree = require('..');
 
 var Shape = datree.Shape;
+var Node = datree.Node;
 var NodeError = datree.Error;
 
 describe('Shape', function(){
     var shape = null;
+    var node = null;
     var linked = null;
 
     describe('#create(def) [with no links]', function(){
@@ -39,9 +41,6 @@ describe('Shape', function(){
                                 type: 'json',
                                 value: [1,2,3]
                             },
-                            ref: {
-                                type: 'ref'
-                            }
                         }
                     },
                     del: {
@@ -54,7 +53,7 @@ describe('Shape', function(){
                     },
                 },
                 removeFields: ['del'],
-                syncFields: [function sync1(){}, function sync2(){}]
+                updateFields: [function sync1(){}, function sync2(){}]
             });
         });
 
@@ -109,7 +108,6 @@ describe('Shape', function(){
             expect(shape.fields.num.type).to.equal('number');
             expect(shape.fields.sub.fields.bool.type).to.equal('boolean');
             expect(shape.fields.sub.fields.json.type).to.equal('json');
-            expect(shape.fields.sub.fields.ref.type).to.equal('ref');
             expect(shape.fields.func.type).to.equal('function');
         });
 
@@ -120,7 +118,6 @@ describe('Shape', function(){
             expect(shape.fields.num.value).to.equal(0);
             expect(shape.fields.sub.fields.bool.value).to.equal(true);
             expect(shape.fields.sub.fields.json.value).to.equal('[1,2,3]');
-            expect(shape.fields.sub.fields.ref.value).to.be.null;
             expect(shape.fields.func.value.constructor.name).to.equal('FuncArr');
             expect(shape.fields.func.value.funcs).to.have.lengthOf(1);
         });
@@ -128,49 +125,50 @@ describe('Shape', function(){
         it('should have correct filters', function(){
             expect(shape.request.funcs).to.have.lengthOf(0);
             expect(shape.update.funcs).to.have.lengthOf(0);
-            expect(shape.syncFields.funcs).to.have.lengthOf(2);
-            expect(shape.syncFields.funcs[0].name).to.equal('sync1');
-            expect(shape.syncFields.funcs[1].name).to.equal('sync2');
+            expect(shape.updateFields.funcs).to.have.lengthOf(2);
+            expect(shape.updateFields.funcs[0].name).to.equal('sync1');
+            expect(shape.updateFields.funcs[1].name).to.equal('sync2');
             expect(shape.fields.str.request.funcs).to.have.lengthOf(1);
             expect(shape.fields.num.update.funcs).to.have.lengthOf(0);
             expect(shape.fields.sub.fields.bool.request.funcs).to.have.lengthOf(0);
             expect(shape.fields.sub.fields.bool.update.funcs).to.have.lengthOf(1);
-            expect(shape.fields.sub.fields.syncFields).to.be.undefined;
+            expect(shape.fields.sub.fields.updateFields).to.be.undefined;
         });
 
     });
 
     describe('#create(def) [with links]', function(){
 
-        before(function(){
-            linked = Shape.create({
-                source: shape,
-                fields: {
-                    f1: 'num',
-                    f2: {
-                        link: 'num',
-                        type: 'number',
-                        value: 0,
-                        cache: false,
-                        writable: false,
-                        request: function(){},
-                        update: function(){},
-                    },
-                    f3: {
-                        source: 'sub',
-                        writable: false,
-                        fields: {
-                            f4: shape,
-                            f5: {
-                                value: shape
-                            },
+        before(function(cb){
+            Node.create(shape, function(newNode){
+                node = newNode;
+                linked = Shape.create({
+                    source: node,
+                    fields: {
+                        f1: 'num',
+                        f2: {
+                            link: 'num',
+                            type: 'number',
+                            value: 0,
+                            cache: false,
+                            writable: false,
+                            request: function(){},
+                            update: function(){},
                         },
-                        dynamic: true
-                    }
-                },
-                addFields: {
-                    f1: 'sub.json'
-                },
+                        f3: {
+                            source: 'sub',
+                            writable: false,
+                            fields: {
+                                f4: node,
+                            },
+                            dynamic: true
+                        }
+                    },
+                    addFields: {
+                        f1: 'sub/json'
+                    },
+                });
+                cb();
             });
         });
 
@@ -181,13 +179,11 @@ describe('Shape', function(){
 
         it('should have correct links', function(){
             expect(linked.link).to.be.undefined;
-            expect(linked.fileds.f1.link).to.equal(shape.getChild('sub.json'));
-            expect(linked.fileds.f2.link).to.equal(shape.getChild('num'));
-            expect(linked.fileds.f3.link).to.be.undefined;
-            expect(linked.fileds.f3.fileds.f4.link).to.equal(shape.getChild('sub'));
-            expect(linked.fileds.f3.fileds.f4.link).to.be.undefined;
-            expect(linked.fileds.f3.fileds.f4.fields.sub.link).to.be.undefined;
-            expect(linked.fileds.f3.fileds.f5.link).to.be.undefined;
+            expect(linked.fields.f1.link).to.equal(node.getDescendant('sub/json'));
+            expect(linked.fields.f2.link).to.equal(node.getChild('num'));
+            expect(linked.fields.f3.link).to.be.undefined;
+            expect(linked.fields.f3.fields.f4.link).to.equal(node);
+            expect(linked.fields.f3.fields.f4.fields.sub.link).to.equal(node.sub);
         });
 
         it('should inherit correct options', function(){
@@ -207,9 +203,6 @@ describe('Shape', function(){
             expect(linked.fields.f3.fields.f4.writable).to.be.false;
             expect(linked.fields.f3.fields.f4.fields.num.writable).to.be.false;
             expect(linked.fields.f3.fields.f4.fields.sub.writable).to.be.false;
-            expect(linked.fields.f3.fields.f5.type).to.equal('ref');
-            expect(linked.fields.f3.fields.f5.value).to.equal(shape);
-            expect(linked.fields.f3.fields.f5.writable).to.be.true;
         });
 
         it('should not inherit filters', function(){
