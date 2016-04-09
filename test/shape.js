@@ -125,6 +125,8 @@ describe('Shape', function(){
         it('should have correct filters', function(){
             expect(shape.request.funcs).to.have.lengthOf(0);
             expect(shape.update.funcs).to.have.lengthOf(0);
+            expect(shape.create.funcs).to.have.lengthOf(0);
+            expect(shape.destroy.funcs).to.have.lengthOf(0);
             expect(shape.updateFields.funcs).to.have.lengthOf(2);
             expect(shape.updateFields.funcs[0].name).to.equal('sync1');
             expect(shape.updateFields.funcs[1].name).to.equal('sync2');
@@ -158,8 +160,12 @@ describe('Shape', function(){
                         f3: {
                             source: 'sub',
                             writable: false,
-                            fields: {
+                            addFields: {
                                 f4: node,
+                            },
+                            removeFields: {
+                                bool: true,
+                                json: false
                             },
                             dynamic: true
                         }
@@ -182,6 +188,7 @@ describe('Shape', function(){
             expect(linked.fields.f1.link).to.equal(node.getDescendant('sub/json'));
             expect(linked.fields.f2.link).to.equal(node.getChild('num'));
             expect(linked.fields.f3.link).to.be.undefined;
+            expect(linked.fields.f3.fields.json.link).to.equal(node.sub.getChild('json'));
             expect(linked.fields.f3.fields.f4.link).to.equal(node);
             expect(linked.fields.f3.fields.f4.fields.sub.link).to.equal(node.sub);
         });
@@ -211,4 +218,99 @@ describe('Shape', function(){
         });
 
     });
+
+    describe('#create(def) [with errors]', function(){
+
+        it('should return nothing when calling the constructor.', function(){
+            expect(Shape()).to.be.undefined;
+            expect(new Shape).to.be.empty;
+        });
+
+        it('should match value with correct types.', function(){
+            var cases = [
+                { type: 'string', value: '' },
+                { type: 'string', value: true, throws: NodeError },
+                { type: 'number', value: .2 },
+                { type: 'number', value: NaN },
+                { type: 'boolean', value: false },
+                { type: 'boolean', value: '', throws: NodeError },
+                { type: 'json', value: null },
+                { type: 'function', value: function(){} },
+                { type: 'function', value: [function(){}, function(){}] },
+                { type: 'function', value: linked.request },
+                { type: 'function', value: {}, throws: NodeError },
+                { type: '...', value: {}, throws: NodeError },
+            ];
+            cases.forEach(function(def){
+                try {
+                    Shape.create({
+                        fields: {
+                            f1: def
+                        }
+                    });
+                    expect(def.throws).to.be.undefined;
+                } catch(err) {
+                    expect(err).to.be.instanceof(def.throws);
+                }
+            });
+        });
+
+        it('should set currect types for values.', function(){
+            var cases = [
+                {value: '', expectType: 'string'},
+                {value: -1, expectType: 'number'},
+                {value: NaN, expectType: 'number'},
+                {value: false, expectType: 'boolean'},
+                {value: null, expectType: 'json'},
+                {value: {}, expectType: 'json'},
+                {value: [], expectType: 'json'},
+                {value: [1, function(){}], expectType: 'json'},
+                {value: function(){}, expectType: 'function'},
+                {value: [function(){}, 1], expectType: 'function'},
+                {value: linked.update, expectType: 'function'},
+            ];
+            cases.forEach(function(def){
+                expect( Shape.create({fields: {f1: def}}).fields.f1.type ).to.equal(def.expectType);
+            });
+        });
+
+        it('should set currect values for types.', function(){
+            var cases = [
+                {type: 'string', expectValue: ''},
+                {type: 'number', expectValue: 0},
+                {type: 'boolean', expectValue: false},
+                {type: 'json', expectValue: 'null'},
+                {type: 'function', expectValue: linked.update.constructor},
+            ];
+            cases.forEach(function(def){
+                var value = Shape.create({fields: {f1: def}}).fields.f1.value;
+                var expectValue = def.expectValue;
+                if(typeof(expectValue) === 'function') expect(value).to.be.instanceof(expectValue);
+                else expect(value).to.equal(expectValue);
+            });
+        });
+
+        it('should throw errors for common defination errors.', function(){
+            var cases = [
+                { fields: { f2: null } },
+                { fields: { f2: '...' } },
+                { fields: { f2: {link: Object} } },
+                { link: node.getChild('str'), type: 'number' },
+                { link: node.getChild('num'), value: '...' },
+                { link: node, dynamic: false },
+                { link: node.getChild('str'), fields: {} },
+                { type: 'string', fields: {} },
+                { type: 'string', dynamic: false },
+                { type: '...' },
+                { updateFields: function(){} },
+            ];
+            cases.forEach(function(def){
+                expect(function(){
+                    Shape.create({fields: {f1: def}});
+                }).throw(NodeError);
+            });
+        });
+
+    });
+
 });
