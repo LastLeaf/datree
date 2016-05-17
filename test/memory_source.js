@@ -4,7 +4,7 @@ var datree = require('..');
 var Node = datree.Node;
 var MemorySource = datree.MemorySource;
 
-describe('Node', function(){
+describe('MemorySource', function(){
 
     describe('#create(def, cb)', function(){
         var post = null;
@@ -40,6 +40,8 @@ describe('Node', function(){
         });
 
         it('should construct a correct node', function(){
+            expect(MemorySource()).to.be.undefined;
+            expect(new MemorySource).to.be.empty;
             expect(post).to.be.instanceof(Node);
             expect(post._id).to.equal('PID');
             expect(post.author).to.be.instanceof(Node);

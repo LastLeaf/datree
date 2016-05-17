@@ -24,7 +24,7 @@ describe('Shape', function(){
                     },
                     num: {
                         cache: true,
-                        type: 'number'
+                        type: Number
                     },
                     sub: {
                         cache: true,
@@ -38,7 +38,7 @@ describe('Shape', function(){
                             },
                             json: {
                                 writable: true,
-                                type: 'json',
+                                type: JSON,
                                 value: [1,2,3]
                             },
                         }
@@ -302,7 +302,7 @@ describe('Shape', function(){
                 { type: 'string', fields: {} },
                 { type: 'string', dynamic: false },
                 { type: '...' },
-                { updateFields: function(){} },
+                { type: String, updateFields: function(){} },
             ];
             cases.forEach(function(def){
                 expect(function(){
