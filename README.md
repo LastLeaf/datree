@@ -1,5 +1,7 @@
 # Datree #
 
+[![Build Status](https://travis-ci.org/LastLeaf/datree.svg?branch=master)](https://travis-ci.org/LastLeaf/datree)
+
 Declare the data structure, transform it when needed, and send requests to update!
 
 Datree is about a concept of full-stack web programming. This is the core implementation of this idea.
