@@ -25,7 +25,33 @@ describe('Filters', function(){
             funcArr.filter(null, '', [false], function(){});
         });
 
-        it('should handles changes and interrupted states', function(cb){
+        it('should handle changes', function(cb){
+            Node.create({
+                type: String,
+                request: function(v, cb){
+                    this.async = true;
+                    this.node.update(v, cb);
+                },
+            }, function(sourceNode){
+                Node.create({
+                    link: sourceNode,
+                    update: function(v){
+                        return v + '!';
+                    },
+                    request: function(v){
+                        return v + '?';
+                    },
+                }, function(node){
+                    node.request('#', function(){
+                        expect(sourceNode.getCachedValue()).to.equal('#?');
+                        expect(node.getCachedValue()).to.equal('#?!');
+                        cb();
+                    });
+                });
+            });
+        });
+
+        it('should interrupted states', function(cb){
             var interruptedCount = 0;
             var interruptFunc = function(){
                 interruptedCount++;
@@ -85,6 +111,7 @@ describe('Filters', function(){
                     f2: {
                         dynamic: true,
                     },
+                    f3: Boolean,
                     triggerUpdates1: function(cb){
                         this.async = true;
                         this.node.getParent().update('f1', 1);
@@ -108,6 +135,11 @@ describe('Filters', function(){
                         f1: {
                             link: 'f1',
                         },
+                        f3: {
+                            link: 'f3',
+                            cache: false,
+                        },
+                        triggerUpdates1: 'triggerUpdates1',
                     },
                 }, function(n){
                     node = n;
@@ -162,7 +194,7 @@ describe('Filters', function(){
             var curProc = 0;
             node.transform({
                 update: function(v, ucb){
-                    if(this.path !== 'f1' || v <= 0) return;
+                    if(this.path[0] !== 'f1' || v <= 0) return;
                     this.async = true;
                     var curNode = this.node;
                     curProc = v;
@@ -178,8 +210,10 @@ describe('Filters', function(){
                         }
                     }, 5);
                 },
-            }, function(){
-                sourceNode.exec('triggerUpdates1');
+            }, function(n){
+                expect(node.f3).to.be.undefined;
+                expect(n.f3).to.equal(false);
+                node.triggerUpdates1();
             });
         });
 
@@ -188,8 +222,9 @@ describe('Filters', function(){
             var curProc = 0;
             var requested = false;
             node.transform({
+                removeFields: ['f3'],
                 update: function(v, ucb){
-                    if(this.path !== 'f1') return;
+                    if(this.path[0] !== 'f1') return;
                     this.async = true;
                     var curNode = this.node;
                     curProc = v;

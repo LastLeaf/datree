@@ -33,15 +33,15 @@ describe('Shape', function(){
                             bool: {
                                 cache: false,
                                 value: true,
-                                request: [1, 'a'],
-                                update: function(){}
+                                request: [1, 'a']
                             },
                             json: {
                                 writable: true,
                                 type: JSON,
                                 value: [1,2,3]
                             },
-                        }
+                        },
+                        update: function(){}
                     },
                     del: {
                         value: 0
@@ -131,10 +131,11 @@ describe('Shape', function(){
             expect(shape.updateFields.funcs[0].name).to.equal('sync1');
             expect(shape.updateFields.funcs[1].name).to.equal('sync2');
             expect(shape.fields.str.request.funcs).to.have.lengthOf(1);
-            expect(shape.fields.num.update.funcs).to.have.lengthOf(0);
-            expect(shape.fields.sub.fields.bool.request.funcs).to.have.lengthOf(0);
-            expect(shape.fields.sub.fields.bool.update.funcs).to.have.lengthOf(1);
-            expect(shape.fields.sub.fields.updateFields).to.be.undefined;
+            expect(shape.fields.num.update).to.be.undefined;
+            expect(shape.fields.sub.request.funcs).to.have.lengthOf(0);
+            expect(shape.fields.sub.update.funcs).to.have.lengthOf(1);
+            expect(shape.fields.sub.fields.bool.update).to.be.undefined;
+            expect(shape.fields.sub.fields.bool.updateFields).to.be.undefined;
         });
 
     });
@@ -171,7 +172,7 @@ describe('Shape', function(){
                         }
                     },
                     addFields: {
-                        f1: 'sub/json'
+                        f1: ['sub', 'json']
                     },
                 });
                 cb();
@@ -185,7 +186,7 @@ describe('Shape', function(){
 
         it('should have correct links', function(){
             expect(linked.link).to.be.undefined;
-            expect(linked.fields.f1.link).to.equal(node.getDescendant('sub/json'));
+            expect(linked.fields.f1.link).to.equal(node.getDescendant(['sub', 'json']));
             expect(linked.fields.f2.link).to.equal(node.getChild('num'));
             expect(linked.fields.f3.link).to.be.undefined;
             expect(linked.fields.f3.fields.json.link).to.equal(node.sub.getChild('json'));
@@ -303,6 +304,7 @@ describe('Shape', function(){
                 { type: 'string', dynamic: false },
                 { type: '...' },
                 { type: String, updateFields: function(){} },
+                { type: String, update: function(){} },
             ];
             cases.forEach(function(def){
                 expect(function(){
