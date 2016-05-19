@@ -1,6 +1,9 @@
 # Datree #
 
+[![NPM Version](https://img.shields.io/npm/v/datree.svg)](https://npmjs.com/package/datree)
 [![Build Status](https://travis-ci.org/LastLeaf/datree.svg?branch=master)](https://travis-ci.org/LastLeaf/datree)
+[![Coverage Status](https://coveralls.io/repos/github/LastLeaf/datree/badge.svg?branch=master)](https://coveralls.io/github/LastLeaf/datree?branch=master)
+[![Dependency Status](https://www.versioneye.com/user/projects/573c9985ce8d0e004737216a/badge.svg)](https://www.versioneye.com/user/projects/573c9985ce8d0e004737216a)
 
 Declare the data structure, transform it when needed, and send requests to update!
 
