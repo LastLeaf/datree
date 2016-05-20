@@ -113,7 +113,7 @@ describe('Node', function(){
                 expect(node.getDynamicChild('$-$')).to.be.undefined;
                 expect(node.getDynamicChild('c')).to.be.undefined;
                 expect(node['$-$']).to.be.undefined;
-                node.get('$-$').createField('c', String, function(f){
+                node.getChild('$-$').createField('c', String, function(f){
                     expect(f).to.be.undefined;
                     node.createField('c', String, function(field){
                         node.createField('@_@', String, function(field2){
@@ -154,7 +154,7 @@ describe('Node', function(){
     });
 
     describe('#get(key)', function(){
-        it('should return node\'s cached value (if no key given) or child node', function(cb){
+        it('should return node\'s cached value (for leaf node) or the node or child node itself', function(cb){
             Node.create({
                 fields: {
                     '$-$': {
@@ -162,9 +162,9 @@ describe('Node', function(){
                     },
                 }
             }, function(node){
-                expect(node.get()).to.be.undefined;
+                expect(node.get()).to.be.equal(node);
                 expect(node.get('c')).to.be.undefined;
-                expect(node.get('$-$').get()).to.equal('str');
+                expect(node.get('$-$')).to.equal('str');
                 cb();
             });
         });
@@ -184,7 +184,7 @@ describe('Node', function(){
                                     expect(arr[0]).to.be.instanceOf(Node);
                                     expect(arr[0].get()).to.equal(node.getCachedValue('f1'));
                                     expect(arr[1]).to.be.instanceOf(Node);
-                                    expect(arr[1].get()).to.be.undefined;
+                                    expect(arr[1].get()).to.be.instanceOf(Function);
                                     expect(arr[1].getCachedValue()).to.be.undefined;
                                     expect(arr[2]).to.be.undefined;
                                     node.f2(cb);
@@ -299,7 +299,7 @@ describe('Node', function(){
                 },
                 dynamic: true,
             }, function(node){
-                node.get('num').request(undefined, function(){
+                node.getChild('num').request(undefined, function(){
                     expect(node.num).to.equal(1);
                     node.request('str', undefined, function(){
                         expect(node.str).to.equal('s');
@@ -336,9 +336,9 @@ describe('Node', function(){
             }, function(node){
                 node.createField('func', Boolean, function(func){
                     node.updateFields([func], function(){
-                        node.get('func').exec();
+                        node.getChild('func').exec();
                         setTimeout(function(){
-                            node.get('c').exec(cb);
+                            node.getChild('c').exec(cb);
                         });
                     });
                 });

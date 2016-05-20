@@ -98,6 +98,89 @@ Although datree core is done, some other important pieces should also be finishe
 * **datree-socketio** Using socket.io to sync data between server and client. It won't be complex.
 * **datree-react** The React binding for datree. It could be as simple as a mixin.
 
+# Guide #
+
+## Using Sources ##
+
+To use datree, firstly a **source** node is required.
+The easy way to create sources is using database bindings or the built-in `MemorySource` to store something temporarily.
+
+```js
+var MemorySource = require('datree').MemorySource;
+
+MemorySource.create({
+    key: 'defaultValue',
+    arr: [{ num: 1 }, { num: 2 }]
+}, function(sourceNode){
+    console.log(sourceNode.key); // === 'defaultValue'
+});
+```
+
+The `MemorySource.create(obj, cb)` call creates a node that works as a data source.
+The node could contain children just like JavaScript objects. Each property is called a **field** of its parent.
+The `obj` could be common JavaScript objects with strings, numbers, booleans, objects, and arrays.
+Strings, numbers, and booleans are default values for fields.
+Types of fields are inferred from default values. Types for fields could not be changed after created.
+Once created, `cb` is called with the created source node as the first argument.
+
+## Transformation ##
+
+Once you need to transform a source node or watch the changes of some fields, you need to transform the source.
+
+```js
+sourceNode.transform({
+    newKey: { link: 'key' },
+    newArr: 'arr', // equals to { link: 'arr' } and { link: sourceNode.getChild('arr') }
+    update: function(newValue){
+        // this function is called when a value is changed in this node
+        console.log(this.node); // === newNode
+    }
+}, function(newNode){
+    console.log(newNode.key); // === undefined
+    console.log(newNode.newKey); // === 'defaultValue'
+});
+```
+
+You could also create a new node instead, using `Node.create(def, cb)`.
+The only difference is that you should specify the source node in the *link* statement.
+
+```js
+var Node = require('datree').Node;
+
+Node.create({
+    newKey: { link: sourceNode.getChild('key') },
+    newArr: sourceNode.getChild('arr') // equals to { link: sourceNode.getChild('arr') }
+}, function(newNode){});
+```
+
+## Understanding Nodes ##
+
+Each value of a field is also a node. Every time you create a node, you are actually creating a tree of nodes.
+So nodes have parent/child relationships, and nodes could be leaf nodes (typed string, number, boolean, json, or function) or non-leaf nodes.
+
+Sometimes you would like to mix source fields and linked fields in a single tree.
+It is also possible through `Node.create(def, cb)`, but you should handle the requests of source fields yourself.
+
+```js
+Node.create({
+    newKey: { link: sourceNode.getChild('key') },
+    newSource: {
+        value: 1, // this is the default value, the type is inferred from it
+        request: function(requestedValue){
+            this.node.update(requestedValue); // update this field to the requested value
+        }
+    }
+}, function(newNode){});
+```
+
+## Updates ##
+
+*Comming soon...*
+
+## Requests ##
+
+*Comming soon...*
+
 # API #
 
 *Coming soon...*

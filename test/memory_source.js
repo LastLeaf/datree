@@ -46,7 +46,7 @@ describe('MemorySource', function(){
             expect(post._id).to.equal('PID');
             expect(post.author).to.be.instanceof(Node);
             expect(post.author._id).to.equal('UID1');
-            expect(post.author.get('name').get()).to.equal('AUTHOR1');
+            expect(post.author.get('name')).to.equal('AUTHOR1');
             expect(post.getChild('published').getCachedValue()).to.equal(false);
             expect(post.getStaticChild('time').get()).to.equal(0);
             expect(post.content).to.be.equal('CONTENT1');

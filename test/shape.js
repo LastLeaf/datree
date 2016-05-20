@@ -147,33 +147,33 @@ describe('Shape', function(){
                 node = newNode;
                 linked = Shape.create({
                     source: node,
-                    fields: {
-                        f1: 'num',
-                        f2: {
-                            link: 'num',
-                            type: 'number',
-                            value: 0,
-                            cache: false,
-                            writable: false,
-                            request: function(){},
-                            update: function(){},
-                        },
-                        f3: {
-                            source: 'sub',
-                            writable: false,
-                            addFields: {
-                                f4: node,
-                            },
-                            removeFields: {
-                                bool: true,
-                                json: false
-                            },
-                            dynamic: true
-                        }
+                    f1: 'num',
+                    f2: {
+                        link: 'num',
+                        type: 'number',
+                        value: 0,
+                        cache: false,
+                        writable: false,
+                        request: function(){},
+                        update: function(){},
                     },
+                    f3: {
+                        source: 'sub',
+                        writable: false,
+                        addFields: {
+                            f4: node,
+                        },
+                        removeFields: {
+                            bool: true,
+                            json: false
+                        },
+                        dynamic: true
+                    },
+                    f4: Number,
                     addFields: {
                         f1: ['sub', 'json']
                     },
+                    removeFields: ['f4'],
                 });
                 cb();
             });
