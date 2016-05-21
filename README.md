@@ -9,6 +9,16 @@ Declare the data structure, transform it when needed, and send requests to updat
 
 Datree is about a concept of full-stack web programming. This is the core implementation of this idea.
 
+# Development Status #
+
+Although datree core is done, some other important pieces should also be finished to make the whole thing works.
+
+* **datree-mongodb** The MongoDB binding for datree. It might be complex in design.
+* **datree-socketio** Using socket.io to sync data between server and client. It won't be complex.
+* **datree-react** The React binding for datree. It could be as simple as a mixin.
+
+I am trying hard to finish them. Contributions are welcomed!
+
 # Concepts #
 
 ## Declarative ##
@@ -58,7 +68,7 @@ But there are relaxations for some cases
 * non-leaf nodes could be "dynamic"
 
 Dynamic nodes could have dynamic children.
-The dynamic children have a changeable order for iteration.
+The dynamic children could be inserted or removed, and have a changeable order for iteration.
 
 # The Datree Core #
 
@@ -89,14 +99,6 @@ MemorySource.create({
     });
 });
 ```
-
-# Development Status #
-
-Although datree core is done, some other important pieces should also be finished to make the whole thing works.
-
-* **datree-mongodb** The MongoDB binding for datree. It might be complex in design.
-* **datree-socketio** Using socket.io to sync data between server and client. It won't be complex.
-* **datree-react** The React binding for datree. It could be as simple as a mixin.
 
 # Guide #
 
@@ -166,20 +168,88 @@ Node.create({
     newKey: { link: sourceNode.getChild('key') },
     newSource: {
         value: 1, // this is the default value, the type is inferred from it
-        request: function(requestedValue){
-            this.node.update(requestedValue); // update this field to the requested value
+        request: function(requestedValue, cb){
+            this.async = true; // this handler is an async function
+            this.node.update(requestedValue, cb); // update this field to the requested value
         }
     }
 }, function(newNode){});
 ```
 
+There is a special type for leaf nodes - "function".
+Function-typed nodes could be called with `.exec(cb)`. It works just like calling the declared function.
+However, you could not pass any parameters.
+
 ## Updates ##
 
-*Comming soon...*
+When a value of a node need to be updated, you need to update on the source (you could ONLY do it on the source nodes).
+If you define a source manually (without database bindings or MemorySource), you should do it with `.update(newValue, cb)`.
+The new values are always converted to the type of corresponding source nodes.
+
+```js
+sourceNode.update(newValue, function(){
+    // this callback is called when data flow finished
+});
+// update to the source node itself is finished synchronously
+console.log(sourceNode.getCachedValue()); // === newValue
+```
+
+If the new value equals to the old one, the update process is not triggered at all.
 
 ## Requests ##
 
-*Comming soon...*
+You could also raise requests to update the source with `.request(newValue, cb)`.
+If a request is not send from the source node, it would be piped to the source.
+Requested values are not updated automatically. They are handled by source nodes.
+
+```js
+node.request(newValue, function(){
+    // this callback is called when data flow finished
+});
+// you cannot assume that the value is changed or would be changed sometime - it all depends to the source
+```
+
+## Dynamic Nodes ##
+
+Sometimes you would like to dynamically add/remove children for a non-leaf node (i.e. working with arrays).
+You could do it by declaring the node as a "dynamic" node.
+Dynamic nodes could have static fields, but it is not recommended.
+
+When you want to update the field list of a dynamic source node, you should use `.createField(fieldName, def, cb)` to create a new field for it (if not created before), and then update the list with `.updateFields(newFieldList, cb)`.
+
+```js
+Node.create({
+    dynamic: true
+}, function(sourceNode){
+    sourceNode.createField('num', {
+        value: 0,
+        writable: false // deny any requests
+    }, function(numField){
+        sourceNode.createField('str', {
+            value: '',
+            writable: false
+        }, function(strField){
+            sourceNode.updateFields([numField, strField], function(){
+                // this callback is called when data flow finished
+            });
+        });
+    });
+});
+```
+
+Dynamic fields have orders. You could iterate them with `.forEach(cb)` or `.forIn(cb)`.
+
+```js
+sourceNode.forEach(function(value, index, node){
+    console.log(value); // this is the value of leaf node or non-leaf node itself
+    console.log(node === sourceNode); // === true
+});
+
+sourceNode.forIn(function(fieldName, value, node){
+    console.log(value); // this is the value of leaf node or non-leaf node itself
+    console.log(node === sourceNode); // === true
+});
+```
 
 # API #
 
