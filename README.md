@@ -251,7 +251,55 @@ sourceNode.forIn(function(fieldName, value, node){
 });
 ```
 
+## Using Filters ##
+
+Filters are allowed in `request`, `update`, and `updateFields` data flows.
+They are quite useful for filtering data and authentication.
+
+```js
+sourceNode.transfrom({
+    newKey: 'key',
+    newArr: {
+        link: 'arr',
+        updateFields: function(newDynamicFields, cb){
+            // the newDynamicFields is an array
+            // the items in the array should be source nodes of the dynamic children
+        }
+    },
+    request: [function(requestedValue, cb){ // an array of filter functions are also allowed
+        // this filter would be called on requests of newKey and newArr
+    }],
+}, function(node){});
+```
+
+A filtering function is sync by default.
+The return value of sync filters are used as the filtered value.
+You could use change the function to async by setting `this.async = true`.
+Then the filtered value could be provided in the callback.
+If the filtered value is undefined, then the value would not be changed.
+
 # API #
+
+Install with `npm install datree`.
+
+`Shape` manages the declaration of datrees.
+You could create datrees with the same declaration using `Shape`.
+`Shape = require('datree').Shape`
+
+* `Shape.create(def)` create and return a new shape with `def`. `def` is the object to declare datrees. The format of def is listed below.
+* `def.source` could be a reference node. It used as the relative node for `def.link`, and does NOT mean this node is linked to the source. It could also be a path to reference node declared in the node's closest ancestor.
+* `def.link` should be given only when this node is linked. The value could be the source node or the path to the reference node declared by `def.source`. If a path is given, it internally calls `Node.getDescendant(path)` on the reference node to find the source node.
+* `def.type` should be the type of this node if it is a leaf node, or undefined if it is a non-leaf node. The allowed types are "string", "number", "boolean", "json", and "function". You could also declare it to JavaScript built-in objects - `String`, `Number`, `Boolean`, `JSON`, and `Function`. It could also be ignored if `def.value` is given - it could be inferred.
+* `def.value` defines the default value for initializing this node. If the node is updated with a new value and the new value could not be converted to the declared type (i.e. "str" to number), it would be set to the default value. Default values could be inferred from `def.type`.
+* `def.cache` defines a leaf node or descendants of a non-leaf node would be cacheable or not. If a leaf node is cacheable, its value could be accessed any time. Otherwise its value could only be accessed in `def.update` filters.
+* `def.writable` if set to false, the node and its descendants would be not writable. A non-writable node silently ignores the requests to it.
+* `def.fields` defines the fields of a non-leaf node. The fields could also be defined in the `def` itself if the field name is not  collided with preserved definition key words. If no fields are found, all static fields are linked to the reference node (i.e. defined by `def.source`).
+* `def.addFields` links all static fields from the reference node, and add some extra fields defined here. Useful for transformation.
+* `def.removeFields` could be an array of field names. These arrays would be removed. Useful for transformation.
+* `def.dynamic` whether the node is dynamic or not. Default to false.
+* `def.update` the update filters.
+* `def.updateFields` the updateFields filters.
+* `def.request` the request filters.
 
 *Coming soon...*
 
