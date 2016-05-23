@@ -305,6 +305,7 @@ describe('Shape', function(){
                 { type: '...' },
                 { type: String, updateFields: function(){} },
                 { type: String, update: function(){} },
+                { value: function(){}, writable: false },
             ];
             cases.forEach(function(def){
                 expect(function(){

@@ -28,11 +28,16 @@ describe('Node', function(){
                             this.async = true;
                             setTimeout(cb, 5);
                         },
+                    },
+                    ro: {
+                        type: Boolean,
+                        writable: false,
                     }
                 },
                 dynamic: true,
             }, function(node){
                 node.request('c', true);
+                node.getChild('ro').destroy();
                 var busyNode = node.getBusyNode();
                 var busyNodeC = node.getBusyNode('c');
                 expect(node.getBusyNode('cc')).to.be.undefined;
@@ -42,6 +47,7 @@ describe('Node', function(){
                 expect(busyNode.getCachedValue()).to.equal(1);
                 expect(busyNodeC.getCachedValue()).to.equal(1);
                 expect(busyNode.isBusy()).to.be.false;
+                expect(busyNode.getBusyNode()).to.be.undefined;
                 node.getChild('c').destroy();
                 node.destroy();
                 expect(node.isBusy()).to.be.false;

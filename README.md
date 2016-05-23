@@ -264,10 +264,12 @@ sourceNode.transfrom({
         updateFields: function(newDynamicFields, cb){
             // the newDynamicFields is an array
             // the items in the array should be source nodes of the dynamic children
+            console.log(this.node === sourceNode.getChild('newArr')); // === true
         }
     },
     request: [function(requestedValue, cb){ // an array of filter functions are also allowed
-        // this filter would be called on requests of newKey and newArr
+        // this filter would be called on requests of descendant nodes - newKey and newArr
+        console.log(this.node === sourceNode); // === true
     }],
 }, function(node){});
 ```
@@ -277,6 +279,41 @@ The return value of sync filters are used as the filtered value.
 You could use change the function to async by setting `this.async = true`.
 Then the filtered value could be provided in the callback.
 If the filtered value is undefined, then the value would not be changed.
+
+The data flow bubbles up to ancestors, so that you could declare filters in the parent to catch all dataflow to its children.
+`this.node` is the current node, and `this.path` is an array to describe the path to the target node that raise the target data flow.
+You could use `this.node.getDescendant(this.path)` to get the target node.
+`this.interrupted` could be set to true if you want to interrupt the whole data flow and also the filter chain.
+
+Datree obtains special locks to prevent race conditions for a single datree.
+There could not be two data flows running in one datree at any moment.
+If one data flow is unfinished (i.e. an async filter did not called the callback), the other data flow on the same datree would wait for it.
+Sometimes it causes deadlocks. BE AWARE OF THIS.
+
+## Busy States ##
+
+A node is busy if one or more requests on itself and its descendants are waiting callbacks.
+
+```js
+Node.create({
+    newSource: {
+        value: 0,
+        request: function(newValue, cb){
+            this.async = true;
+            this.node.update(newValue);
+            setTimeout(cb, 0);
+        }
+    }
+}, function(node){
+    node.request('newSource', 1, function(){
+        console.log(node.isBusy('newSource')); // === false
+    });
+    console.log(node.isBusy('newSource')); // === true
+});
+```
+
+If a node is writable, there is always a non-writable node keeping track of the busy state of it.
+You could get the node by `node.getBusyNode()`, but you should NEVER update it yourself.
 
 # API #
 
@@ -297,11 +334,43 @@ You could create datrees with the same declaration using `Shape`.
 * `def.addFields` links all static fields from the reference node, and add some extra fields defined here. Useful for transformation.
 * `def.removeFields` could be an array of field names. These arrays would be removed. Useful for transformation.
 * `def.dynamic` whether the node is dynamic or not. Default to false.
-* `def.update` the update filters.
-* `def.updateFields` the updateFields filters.
-* `def.request` the request filters.
+* `def.update` the update filters. See guides for usages.
+* `def.updateFields` the updateFields filters. See guides for usages.
+* `def.request` the request filters. See guides for usages.
+* `def.create` the create filters. These filters are not in any data flow, have no value to filter, and would not bubble up. It just allows you do something after node creation (i.e. inserting dynamic children).
+* `def.destroy` the destroy filters. Similar to `def.create`, these filters are not in any data flow, have no value to filter, and would not bubble up.
 
-*Coming soon...*
+`Node` provides basic support for node manipulation.
+`Node = require('datree').Node`
+
+* `Node.create(defOrShape, cb)` create a new node and return it in callback. `defOrShape` could be a shape or def of a shape.
+* `node.destroy()` destroy the node. The node would not receive any requests and updates any more.
+* `node.getShape()` get the shape of the node.
+* `node.getParent()` get the parent node of the node.
+* `node.getFieldName()` get the field name in its parent of the node.
+* `node.getCachedValue()` get the cached value if the node is cacheable.
+* `node.getStaticChild(fieldName)` get the static child node by the `fieldName` of the node.
+* `node.getDynamicChild(fieldName)` get the dynamic child node by the `fieldName` of the node.
+* `node.getChild(fieldName)` get the static child or the dynamic child by the `fieldName` of the node.
+* `node.getDescendant(path)` get the descendant by the `path` of the node. `path` is an array of field names (or a single string of a field name). This method calls `.getChild(fieldName)` repeatedly to find the descendant from the node.
+* `node.get()` return the cached value for leaf node, or the node itself for non-leaf node. If the node is function-typed, it returns a function that could be directly called (no need to use `node.exec(cb)`).
+* `node.get(fieldName)` call `node.get()` on the child node in `fieldName` of the node (i.e. return cached value for leaf child node, or the child node it self for non-leaf child node). If the field name only contains letters, numbers, and underscores (common varible name compatible), `node[fieldName]` is a shortcut for this method.
+* `node.getDynamicChildren()` get an array of dynamic children of the node.
+* `node.forEach(cb)` iterate dynamic children of the node. See guides for usages.
+* `node.forIn(cb)` iterate dynamic children of the node. See guides for usages.
+* `node.isBusy([fieldName], cb)` whether the node or the child in `fieldName` of it is busy or not.
+* `node.getBusyNode([fieldName], cb)` get a node indicating the busy state of the node or the child in `fieldName` of it.
+* `node.transform(def, cb)` create a new node with `def.source` default to the node.
+* `node.createField(fieldName, def, cb)` create a new dynamic child for the node. See guides for usages.
+* `node.updateFields(arr, cb)` update field list for a dynamic node. See guides for usages.
+* `node.update([fieldName], newValue, cb)` update a source node or the child in `fieldName` of it. See guides for usages.
+* `node.request([fieldName], requestedValue, cb)` raise a request on a node or the child in `fieldName` of it. See guides for usages.
+* `node.exec([fieldName], cb)` call a function-typed node. A function-typed node is in a special data flow. You could trigger a function-typed node with no arguments using this method.
+
+`MemorySource` is a helper for creating common in-memory data sources.
+`MemorySource = require('datree').MemorySource`
+
+`MemorySource.create(obj, cb)` create a source node. The `obj` contains structure and default values for the node. Arrays in `obj` would be translated to dynamic nodes, with pre-defined append and remove features. To append a child to the array, request a new object on `append` field (it is a JSON-typed field). To remove a child in the array, request the field name on `remove` field.
 
 # LICENSE #
 

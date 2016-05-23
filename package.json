@@ -1,6 +1,6 @@
 {
   "name": "datree",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Map database or other data sources to data views, and transform between views.",
   "main": "index.js",
   "scripts": {
