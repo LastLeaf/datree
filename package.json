@@ -1,7 +1,7 @@
 {
   "name": "datree",
-  "version": "0.1.0",
-  "description": "Map database or other data sources to data views, and transform between views.",
+  "version": "0.1.1",
+  "description": "Declare the data structure, transform it when needed, and send requests to update!",
   "main": "index.js",
   "scripts": {
     "test": "mocha",
@@ -10,18 +10,18 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/LastLeaf/dbview.git"
+    "url": "git+https://github.com/LastLeaf/datree.git"
   },
   "author": "Boquan Fu <bqfu@163.com> (LastLeaf)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/LastLeaf/dbview/issues"
+    "url": "https://github.com/LastLeaf/datree/issues"
   },
-  "homepage": "https://github.com/LastLeaf/dbview#readme",
+  "homepage": "https://github.com/LastLeaf/datree#readme",
   "devDependencies": {
     "chai": "^3.5.0",
     "coveralls": "^2.11.9",
-    "istanbul": "^0.4.2",
+    "istanbul": "~0.4.2",
     "mocha": "^2.4.5"
   }
 }
