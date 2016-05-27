@@ -1,6 +1,6 @@
 {
   "name": "datree",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Declare the data structure, transform it when needed, and send requests to update!",
   "main": "index.js",
   "scripts": {

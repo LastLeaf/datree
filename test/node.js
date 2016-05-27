@@ -14,7 +14,47 @@ describe('Node', function(){
                 expect(node).to.be.instanceOf(Node);
                 cb();
             });
-            expect(ret).to.be.undefined;
+            expect(ret).to.be.instanceOf(Node);
+        });
+    });
+
+    describe('#create(def, cb) [sync]', function(){
+        it('should apply expected values', function(cb){
+            var sourceNode = Node.create({
+                key: {
+                    value: 1,
+                    create: function(cb){
+                        this.async = true;
+                        var node = this.node;
+                        setTimeout(function(){
+                            node.update(2);
+                            cb();
+                        }, 0);
+                    },
+                },
+            });
+            var node = sourceNode.transform({
+                key: {
+                    link: 'key',
+                    update: [function(v){
+                        return v * 100;
+                    }, function(v, cb){
+                        this.async = true;
+                        setTimeout(function(){
+                            cb(-v);
+                        }, 0);
+                    }, function(v){
+                        return v * 100;
+                    }]
+                }
+            });
+            expect(sourceNode.key).to.equal(1);
+            expect(node.key).to.equal(1);
+            setTimeout(function(){
+                expect(sourceNode.key).to.equal(2);
+                expect(node.key).to.equal(-20000);
+                cb();
+            }, 10);
         });
     });
 
