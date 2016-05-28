@@ -35,7 +35,6 @@
         "no-native-reassign": 2,
         "no-octal": 1,
         "no-octal-escape": 2,
-        "no-unused-expressions": 1,
         "no-unused-vars": 1,
         "no-use-before-define": 0,
         "no-useless-escape": 1,

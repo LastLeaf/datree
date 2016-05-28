@@ -315,6 +315,15 @@ Node.create({
 If a node is writable, there is always a non-writable node keeping track of the busy state of it.
 You could get the node by `node.getBusyNode()`, but you should NEVER update it yourself.
 
+## Synchronous Creation ##
+
+Node creation calls `Node.create(defOrShape, cb)`, `node.transform(def, cb)`, and `node.createField(fieldName, def, cb)` have an synchronously returned value, indicating the half-created node.
+A half-created node has the same structure of the created node, but the current value might not have been transferred from its parent.
+This happens in following cases.
+
+* The node or its descendants has asynchronous `update` filters, or one of their non-cacheable sources has asynchronous `update` filters.
+* The node or its descendants has asynchronous `create` filters. `MemorySource` use them on arrays.
+
 # API #
 
 Install with `npm install datree`.
