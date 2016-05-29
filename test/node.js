@@ -216,7 +216,7 @@ describe('Node', function(){
         });
     });
 
-    describe('#getDynamicChildren()', function(){
+    describe('#getDynamicChildren() #getLength()', function(){
         it('should return an array of node\'s dynamic children', function(cb){
             Node.create({
                 dynamic: true,
@@ -226,6 +226,7 @@ describe('Node', function(){
                         sourceNode.createField('f2', function(){}, function(f2){
                             sourceNode.updateFields([f2], function(){
                                 sourceNode.updateFields([f1, f2], function(){
+                                    expect(node.getLength()).to.equal(2);
                                     var arr = node.getDynamicChildren();
                                     expect(arr[0]).to.be.instanceOf(Node);
                                     expect(arr[0].get()).to.equal(node.getCachedValue('f1'));

@@ -365,6 +365,7 @@ You could create datrees with the same declaration using `Shape`.
 * `node.get()` return the cached value for leaf node, or the node itself for non-leaf node. If the node is function-typed, it returns a function that could be directly called (no need to use `node.exec(cb)`).
 * `node.get(fieldName)` call `node.get()` on the child node in `fieldName` of the node (i.e. return cached value for leaf child node, or the child node it self for non-leaf child node). If the field name only contains letters, numbers, and underscores (common varible name compatible), `node[fieldName]` is a shortcut for this method.
 * `node.getDynamicChildren()` get an array of dynamic children of the node.
+* `node.getLength()` get the count of dynamic children.
 * `node.forEach(cb)` iterate dynamic children of the node. See guides for usages.
 * `node.forIn(cb)` iterate dynamic children of the node. See guides for usages.
 * `node.isBusy([fieldName], cb)` whether the node or the child in `fieldName` of it is busy or not.
